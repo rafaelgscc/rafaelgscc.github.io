@@ -1,6 +1,4 @@
 ---
 layout: home
-title: Página Inicial
+title: ""
 ---
-
-Bem-vindo ao meu site com e o tema **minima**! ✨

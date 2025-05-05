@@ -4,4 +4,4 @@ title: Sobre
 permalink: /sobre/
 ---
 
-Essa é a página "Sobre" do meu site. Aqui posso colocar mais informações sobre mim.
+Um pequeno site sobre programação, eletrônica, e coisas que eu acho e são interessantes.
