@@ -1,6 +1,10 @@
 theme: jekyll-theme-minimal
 title: Rafael's homepage
-description: Projetos e muito mais!
+description: >
+  Meu site pessoal criado com GitHub Pages e Jekyll, onde compartilho projetos, ideias e aprendizados em tecnologia.
+author:
+  name: Rafael Gomes da Silva
+  email: rafaelgscc@gmail.com
 
 minima:
   skin: solarized-dark
