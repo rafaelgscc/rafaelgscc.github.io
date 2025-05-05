@@ -14,5 +14,9 @@ plugins:
   - jekyll-seo-tag
 
 social_links:
-  - { platform: github,  user_url: "https://github.com/rafaelgscc" }
-  - { platform: linkedin, user_url: "https://www.linkedin.com/in/rafael-gomes-da-silva-775b80123/" }
+    - title: Meu repositorio no GitHub
+      icon: github
+      url: "https://github.com/rafaelgscc"
+    - title: Meu LinkedIn
+      icon: linkedin
+      url: "https://www.linkedin.com/in/rafael-gomes-da-silva-775b80123/"
