@@ -1,6 +1,10 @@
 theme: jekyll-theme-minimal
 title: Rafael's homepage
 description: Projetos e muito mais!
+
+minima:
+  skin: solarized-dark
+
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
