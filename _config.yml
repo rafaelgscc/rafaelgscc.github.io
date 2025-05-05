@@ -6,17 +6,23 @@ author:
   name: Rafael Gomes da Silva
   email: rafaelgscc@gmail.com
 
-minima:
-  skin: solarized-dark
-
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
 
-social_links:
+#Os plugins ficam aqui
+minima:
+  skin: solarized-dark
+  date_format: "%d %b, %Y"
+  social_links:
     - title: Meu repositorio no GitHub
       icon: github
       url: "https://github.com/rafaelgscc"
     - title: Meu LinkedIn
       icon: linkedin
       url: "https://www.linkedin.com/in/rafael-gomes-da-silva-775b80123/"
+  hide_site_feed_link: true
+
+
+
+
