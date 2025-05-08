@@ -1,4 +1,4 @@
-theme: jekyll-theme-minimal
+theme: minima
 title: Blog do rafaelgscc
 description: >
   Meu site pessoal criado com GitHub Pages e Jekyll, onde compartilho projetos, ideias e aprendizados em tecnologia.
@@ -9,6 +9,10 @@ author:
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
+
+sass:
+  quiet_deps: true
+  silence_deprecations: [import]  
 
 #Os plugins ficam aqui
 minima:
@@ -22,7 +26,3 @@ minima:
       icon: linkedin
       url: "https://www.linkedin.com/in/rafael-gomes-da-silva-775b80123/"
   hide_site_feed_link: true
-
-
-
-
