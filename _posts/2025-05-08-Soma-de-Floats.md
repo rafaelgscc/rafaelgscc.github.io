@@ -181,6 +181,121 @@ Um número `float` é representado usando o padrão **IEEE 754**, que divide um 
 
 O computador **trunca** essa dízima para caber nos 23 bits da mantissa. Isso já gera um pequeno erro **logo na representação**.
 
+O código descritivo em VHDL mostra um pouco de como um circuito trata uma soma de pontos flutuantes a partir do IEEE754
+
+```vhdl
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity ieee754_Somador is
+    Port (
+        A       : in  STD_LOGIC_VECTOR(31 downto 0);
+        B       : in  STD_LOGIC_VECTOR(31 downto 0);
+        RESULT  : out STD_LOGIC_VECTOR(31 downto 0)
+    );
+end ieee754_somador;
+
+architecture Behavioral of ieee754_somador is
+
+    -- Declaração de sinais com inicialização para evitar latches invisíveis
+    signal sign_a, sign_b        : STD_LOGIC := '0';
+    signal exp_a, exp_b          : unsigned(7 downto 0) := (others => '0');
+    signal man_a, man_b          : unsigned(23 downto 0) := (others => '0');
+    signal exp_diff              : integer := 0;
+    signal aligned_man_a, aligned_man_b : unsigned(24 downto 0) := (others => '0');
+    signal result_sign           : STD_LOGIC := '0';
+    signal result_exp            : unsigned(7 downto 0) := (others => '0');
+    signal sum_man               : unsigned(25 downto 0) := (others => '0');
+    signal result_man            : unsigned(24 downto 0) := (others => '0');
+    signal normalized_man        : unsigned(22 downto 0) := (others => '0');
+    signal final_exp             : unsigned(7 downto 0) := (others => '0');
+
+begin
+
+    process(A, B)
+    begin
+        -- Inicialização explícita no início do processo
+        sign_a <= '0';
+        sign_b <= '0';
+        exp_a  <= (others => '0');
+        exp_b  <= (others => '0');
+        man_a  <= (others => '0');
+        man_b  <= (others => '0');
+        exp_diff <= 0;
+        aligned_man_a <= (others => '0');
+        aligned_man_b <= (others => '0');
+        result_sign <= '0';
+        result_exp <= (others => '0');
+        sum_man <= (others => '0');
+        result_man <= (others => '0');
+        normalized_man <= (others => '0');
+        final_exp <= (others => '0');
+
+        -- Verificar valores indefinidos
+        if (A /= A or B /= B) then
+            report "Warning: Entrada contém valores indefinidos!" severity warning;
+            RESULT <= (others => '0'); -- Retorna 0 se houver metavalores
+        else
+            -- Separar campos
+            sign_a <= A(31);
+            sign_b <= B(31);
+            exp_a  <= unsigned(A(30 downto 23));
+            exp_b  <= unsigned(B(30 downto 23));
+
+            -- Acrescentar bit oculto (1) na mantissa
+            man_a  <= "1" & unsigned(A(22 downto 0));
+            man_b  <= "1" & unsigned(B(22 downto 0));
+
+            -- Alinhar expoentes garantindo que sejam válidos
+            if exp_a > exp_b then
+                exp_diff <= to_integer(exp_a - exp_b);
+                aligned_man_a <= resize(man_a, 25);
+                aligned_man_b <= shift_right(resize(man_b, 25), exp_diff);
+                result_exp <= exp_a;
+            elsif exp_b > exp_a then
+                exp_diff <= to_integer(exp_b - exp_a);
+                aligned_man_a <= shift_right(resize(man_a, 25), exp_diff);
+                aligned_man_b <= resize(man_b, 25);
+                result_exp <= exp_b;
+            else
+                exp_diff <= 0;
+                aligned_man_a <= resize(man_a, 25);
+                aligned_man_b <= resize(man_b, 25);
+                result_exp <= exp_a;
+            end if;
+
+            -- Soma
+            sum_man <= ("0" & aligned_man_a) + ("0" & aligned_man_b);
+
+            -- Normalização
+            if sum_man(25) = '1' then
+                result_man <= shift_right(sum_man(25 downto 1), 1);
+                final_exp <= result_exp + 1;
+            else
+                result_man <= sum_man(24 downto 0);
+                final_exp <= result_exp;
+            end if;
+
+            normalized_man <= result_man(22 downto 0);
+
+            -- Saída final
+            result_sign <= '0'; -- Apenas resultados positivos por enquanto
+            RESULT <= result_sign & std_logic_vector(final_exp) & std_logic_vector(normalized_man);
+        end if;
+    end process;
+
+end Behavioral;
+```
+Temos assim, o RTL do que seria o ciruito completo do somador ieee754, que uma parte dele é assim:
+
+
+<div style="text-align: center;">
+  <img src="/assets/images/RTL.png" alt="RTL do circuito" style="width: 60%;">
+</div>
+
+Este circuito é a base do tratamento de soma de pontos flutuantes em um computador.
+
 ---
 
 ## Parte 3: A soma de floats no nível eletrônico (hardware)
