@@ -43,8 +43,7 @@ int main() {
 ---
 ## Parte 1: Como um computador soma
 
-Em um sistema eletrônico, existem apenas dois números, 0 (adotando a tensão de 0v) e 1 (Adotando 5v para TTL
-ou 3.3v ), um somador binário basicamente soma dois bits e leva um bit para frente, basicamente um "Vai um"
+Em sistemas eletrônicos digitais, a informação é codificada em dois estados de tensão, representados pelos bits 0 e 1. A operação fundamental de adição é realizada por circuitos lógicos chamados somadores binários. Um meio somador combina dois bits, gerando a soma (S) e o "vai um" (Carry out - Cout):
 
 | A | B | S (A⊕B) | Cout (A∧B) |
 | - | - | ------- | ---------- |
@@ -53,14 +52,13 @@ ou 3.3v ), um somador binário basicamente soma dois bits e leva um bit para fre
 | 1 | 0 | 1       | 0          |
 | 1 | 1 | 0       | 1          |
 
-O circuito gerado basicamente é:
-
+Este circuito é implementado com portas lógicas:
 
 <div style="text-align: center;">
   <img src="/assets/images/meio_somador.png" alt="Meio Somador" style="width: 60%;">
 </div>
 
-Com isso, podemos cascatear o "Vai um" ou como chamamos de _Carry out_ e assim, compomos o somador completo, de tabela:
+Para somar números com múltiplos bits, utilizamos o somador completo, que incorpora o "vai um" da etapa anterior (Cin):
 
 | A | B | Cin | S (A⊕B⊕Cin) | Cout |
 | - | - | --- | ----------- | ---- |
@@ -69,19 +67,19 @@ Com isso, podemos cascatear o "Vai um" ou como chamamos de _Carry out_ e assim, 
 | 1 | 0 | 1   | 0           | 1    |
 | 1 | 1 | 1   | 1           | 1    |
 
-Com representação lógica:
+Com sua representação lógica:
 
 <div style="text-align: center;">
   <img src="/assets/images/somador_completo.png" alt="Somador Completo" style="width: 60%;">
 </div>
 
-E em nível de silício, tudo isso é construído com transistores, como neste exemplo em tecnologia CMOS:
+Em nível de silício, transistores CMOS implementam essas funções:
 
 <div style="text-align: center;">
   <img src="/assets/images/somador_completo_CMOS.png" alt="Somador Completo em CMOS" style="width: 60%;">
 </div>
 
-Em uma linguagem descritiva como o VHDL, podemos descrever o processo de soma de 4 bits de forma simples
+A linguagem de descrição de hardware VHDL permite descrever um somador de 4 bits de forma estruturada, conectando quatro somadores de 1 bit em cascata:
 
 ```vhdl
 library IEEE;
@@ -159,13 +157,13 @@ end Structural;
 </div>
 
 
-Com essa estrutura, é possível cascatear múltiplos somadores para operações com 8, 16 ou 32 bits. E é justamente a partir desse princípio que a soma de números `float` se torna possível — mas com complexidades adicionais.
+Essa arquitetura em cascata permite a construção de somadores para números com um número maior de bits. A soma de números de ponto flutuante, embora mais complexa, também se baseia nesses princípios fundamentais da aritmética binária.
 
 ---
 
-## Parte 2: Como o computador representa números float
+## Parte 2: A representação traiçoeira dos números float
 
-Um número `float` é representado usando o padrão **IEEE 754**, que divide um número em três partes:
+Os computadores representam números de ponto flutuante utilizando o padrão **IEEE 754**. Este padrão define um formato que divide um número em três partes:
 
 | Parte | Bits | Descrição                     |
 |-------|------|-------------------------------|
@@ -173,15 +171,23 @@ Um número `float` é representado usando o padrão **IEEE 754**, que divide um 
 | E     | 8    | Expoente (com viés)           |
 | M     | 23   | Mantissa ou fração (significand) |
 
-### Exemplo: 0.1 em IEEE 754 (32 bits)
+**O problema da representação: 0.1 em binário**
 
-- 0.1 decimal não pode ser representado exata e finitamente em binário (assim como 1/3 não pode em decimal).
-- Ele vira uma dízima binária:  
-  `0.000110011001100...`
+A dificuldade começa porque alguns números decimais que possuem uma representação finita, como 0.1, não podem ser expressos de forma exata e finita na base binária. Vamos ver porquê:
 
-O computador **trunca** essa dízima para caber nos 23 bits da mantissa. Isso já gera um pequeno erro **logo na representação**.
+<span class="math-inline">0.1_{10} = ?_2\$
+Multiplicando sucessivamente a parte fracionária por 2:
+-   \$0.1 \times 2 = 0.2\$ (inteiro: 0)
+-   \$0.2 \times 2 = 0.4\$ (inteiro: 0)
+-   \$0.4 \times 2 = 0.8\$ (inteiro: 0)
+-   \$0.8 \times 2 = 1.6\$ (inteiro: 1)
+-   \$0.6 \times 2 = 1.2\$ (inteiro: 1)
+-   \$0.2 \times 2 = 0.4\$ (inteiro: 0)  \<- Repetição do padrão
+Assim, \$0.1_{10} = 0.000110011001100..._2\$, uma dízima binária infinita, assim como \$1/3\$ é uma dízima decimal infinita (\$0.333...\).
 
-O código descritivo em VHDL mostra um pouco de como um circuito trata uma soma de pontos flutuantes a partir do IEEE754
+O computador, com seus 23 bits limitados para a mantissa, precisa truncar essa representação, introduzindo uma pequena imprecisão já na forma como o número é armazenado.
+
+O código VHDL a seguir ilustra de forma simplificada as etapas de uma soma de ponto flutuante seguindo o padrão IEEE 754:
 
 ```vhdl
 library IEEE;
@@ -287,8 +293,7 @@ begin
 
 end Behavioral;
 ```
-Temos assim, o RTL do que seria o ciruito completo do somador ieee754, que uma parte dele é assim:
-
+Este código RTL (Register-Transfer Level) descreve as operações de alinhamento de expoentes, soma das mantissas (de forma simplificada para números positivos), e normalização do resultado. A unidade de ponto flutuante (ULA-UPF) dentro do processador executa essas etapas através de circuitos combinacionais e sequenciais complexos.
 
 <div style="text-align: center;">
   <img src="/assets/images/RTL.png" alt="RTL do circuito" style="width: 60%;">
@@ -317,7 +322,7 @@ Essas etapas são implementadas por meio de **circuitos digitais combinacionais*
 
 > ⚠️ Mesmo antes da soma, já temos erro na representação. Depois da soma, o erro se acumula ou muda.
 
-Em computadores anigos, seja IBMs, Amigas ou mesmo Atari STs, para se calcular o número de ponto flutuante era necessário um processador a parte, uma FPU (ou intel 80x87 ou Motorola 68882) já que seus processadores apenas calculavam numeros inteiros
+Em processadores mais antigos, como os utilizados em sistemas como IBM PC, Amiga e Atari ST, o cálculo de ponto flutuante era frequentemente realizado por um coprocessador matemático separado (FPU - Floating Point Unit), como o Intel 80x87 ou o Motorola 68882, pois as CPUs principais eram otimizadas para operações inteiras. A comunicação entre a CPU e a FPU envolvia instruções específicas em assembly, como demonstrado abaixo:
 
 ```asm
 
@@ -336,11 +341,15 @@ _start:
 
     ;(...)
 ```    
-Em 1991, a Intel revolucionou com a introdução no mercado do 486dx, um processador que não dependia de uma FPU x87, isso se sussedeu com o pentium, que em suas primeiras unidades, teve problemas com calculos de pontos flutuantes devido a um erro de arquitetura.
+A integração da FPU diretamente no chip da CPU, como ocorreu com o Intel 486DX em 1991, marcou um avanço significativo no desempenho do processamento de ponto flutuante. Curiosamente, as primeiras gerações do Pentium enfrentaram um notório problema de precisão em seus cálculos de ponto flutuante, conhecido como "bug da divisão do Pentium", demonstrando a complexidade de implementar corretamente essas operações em hardware.
 
 ---
 
-## Parte 3: Como evitar erros com float
+## Parte 4: Navegando pelas armadilhas do ponto flutuante
+
+Para aplicações onde a precisão decimal é fundamental, como sistemas financeiros (cálculo de juros, transações monetárias), criptomoedas (rastreamento de saldos e transações) ou simulações científicas de alta precisão (cálculo de trajetórias, modelagem molecular), a imprecisão inerente aos números float pode levar a erros significativos. Nessas situações, é crucial adotar estratégias para mitigar esses problemas.
+
+Linguagens de alto nível oferecem mecanismos para trabalhar com maior precisão, geralmente através de bibliotecas que implementam aritmética decimal. Essas bibliotecas representam os números decimais de forma diferente, frequentemente como inteiros com um expoente implícito, permitindo cálculos exatos.
 
 ### ✅ Em Python (com `decimal`)
 
@@ -372,6 +381,34 @@ let b = new Decimal('0.2');
 console.log(a.plus(b).equals(new Decimal('0.3')));  // true
 ```
 
+### ✅ Em C não temos uma biblioteca padrão, mas usa-se a `GMP (GNU Multiple Precision Arithmetic Library)`
+
+```c
+#include <stdio.h>
+#include <gmp.h>
+
+int main() {
+    mpf_t a, b, resultado;
+    mpf_set_default_prec(256); // Define a precisão
+
+    mpf_init(a);
+    mpf_init(b);
+    mpf_init(resultado);
+
+    mpf_set_str(a, "123.456", 10);
+    mpf_set_str(b, "789.123", 10);
+
+    mpf_add(resultado, a, b); // Realiza a soma
+
+    gmp_printf("Resultado: %.10Ff\n", resultado); // Saída com 10 casas decimais
+
+    mpf_clear(a);
+    mpf_clear(b);
+    mpf_clear(resultado);
+    return 0;
+}
+```
+
 ---
 
 ## Parte 4: Alternativas práticas
@@ -386,8 +423,8 @@ console.log(a.plus(b).equals(new Decimal('0.3')));  // true
 2. **Trabalhe com inteiros sempre que possível:**  
    Em sistemas financeiros, armazene valores em centavos:
 
-   ```python
-   preco = 1099  # em centavos
+   ```csharp
+   preco = 1099  // em centavos
    ```
 
 3. **Use bibliotecas de precisão arbitrária**  
