@@ -411,7 +411,7 @@ int main() {
 
 ---
 
-## Parte 4: Alternativas práticas
+## Parte 5: Alternativas práticas
 
 1. **Evite comparações diretas com floats:**  
    Sempre use uma margem de erro (`epsilon`):
